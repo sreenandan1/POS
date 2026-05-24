@@ -1,0 +1,428 @@
+<div class="container-fluid py-3 px-md-4 vh-100 d-flex flex-column" style="overflow: hidden;">
+  <!-- Navigation Header -->
+  <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom flex-shrink-0">
+    <div class="d-flex align-items-center">
+      <button (click)="goBack()" class="btn btn-outline-secondary btn-sm rounded-3 me-3">
+        <i class="bi bi-arrow-left me-1"></i> Back
+      </button>
+      <h3 class="fw-bold mb-0 text-dark">
+        <i class="bi bi-shop-window text-primary me-2"></i> POS Register Terminal
+      </h3>
+    </div>
+    <div class="text-muted small">Active Operator: <span class="badge bg-primary">{{ authService.currentUserValue?.fullName }}</span></div>
+  </div>
+
+  <!-- Main Split Terminal Grid -->
+  <div class="row g-3 flex-grow-1" style="min-height: 0;">
+    <!-- Left Section (70% in wide screens): Products Search & Catalog Grid -->
+    <div class="col-lg-8 d-flex flex-column h-100" style="min-height: 0;">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white d-flex flex-column h-100">
+        <!-- Search and filters -->
+        <div class="row g-2 mb-3 flex-shrink-0">
+          <div class="col-md-6">
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0 rounded-start-3 text-muted"><i class="bi bi-search"></i></span>
+              <input 
+                type="text" 
+                class="form-control border-start-0 rounded-end-3" 
+                placeholder="Scan barcode or type to search..."
+                [(ngModel)]="searchText"
+                (ngModelChange)="onSearchChange()"
+              >
+            </div>
+          </div>
+          <div class="col-md-6">
+            <!-- Category Pills scrollable -->
+            <div class="d-flex gap-1 overflow-x-auto pb-1 categories-scroll-bar">
+              <button 
+                (click)="filterByCategory(null)" 
+                class="btn btn-sm rounded-pill px-3 py-1.5 fw-semibold"
+                [ngClass]="selectedCategoryId === null ? 'btn-primary' : 'btn-light text-secondary'"
+              >
+                All Items
+              </button>
+              <button 
+                *ngFor="let cat of categories"
+                (click)="filterByCategory(cat.id!)" 
+                class="btn btn-sm rounded-pill px-3 py-1.5 fw-semibold"
+                [style.backgroundColor]="selectedCategoryId === cat.id ? cat.color : ''"
+                [style.color]="selectedCategoryId === cat.id ? '#ffffff' : ''"
+                [ngClass]="selectedCategoryId === cat.id ? '' : 'btn-light text-secondary'"
+              >
+                {{ cat.name }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scrollable Products Catalog Grid -->
+        <div class="flex-grow-1 overflow-y-auto px-1 products-scroll-bar" style="min-height: 0;">
+          <div *ngIf="loading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="text-muted mt-2">Loading items...</p>
+          </div>
+
+          <div *ngIf="!loading && products.length === 0" class="text-center py-5">
+            <i class="bi bi-inbox text-muted fs-1 mb-2 d-block"></i>
+            <p class="text-muted">No items available in this category.</p>
+          </div>
+
+          <div *ngIf="!loading && products.length > 0" class="row row-cols-2 row-cols-sm-3 row-cols-md-3 row-cols-xl-4 g-3">
+            <div *ngFor="let prod of products" class="col">
+              <div 
+                class="product-card card h-100 border-0 rounded-4 overflow-hidden shadow-sm"
+                [class.out-of-stock-card]="prod.stockQuantity === 0"
+                (click)="addToCart(prod)"
+              >
+                <!-- Image Container with tags -->
+                <div class="position-relative">
+                  <img 
+                    [src]="prod.imageUrl || 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=200'" 
+                    class="card-img-top object-fit-cover" 
+                    style="height: 120px;"
+                    [alt]="prod.name"
+                  >
+                  <!-- Out of stock cover overlay -->
+                  <div *ngIf="prod.stockQuantity === 0" class="out-of-stock-overlay d-flex align-items-center justify-content-center">
+                    <span class="badge bg-danger rounded-pill fw-bold px-3 py-1.5 fs-6 shadow">SOLD OUT</span>
+                  </div>
+                  <!-- Category color tag -->
+                  <span 
+                    class="badge category-corner-badge position-absolute top-0 start-0 m-2 text-white px-2.5 py-1"
+                    [style.backgroundColor]="prod.category?.color || '#6c757d'"
+                  >
+                    {{ prod.category?.name }}
+                  </span>
+                </div>
+
+                <div class="card-body p-2.5 d-flex flex-column justify-content-between">
+                  <div class="mb-2">
+                    <h6 class="fw-bold text-dark mb-0 text-truncate" [title]="prod.name">{{ prod.name }}</h6>
+                    <code class="text-muted extra-small font-monospace">{{ prod.sku }}</code>
+                  </div>
+
+                  <div class="d-flex align-items-center justify-content-between">
+                    <span class="fw-extrabold text-primary fs-5">${{ prod.price.toFixed(2) }}</span>
+                    
+                    <!-- Stock Indicators -->
+                    <span *ngIf="prod.stockQuantity > 0 && prod.stockQuantity <= prod.minStockLevel" class="badge bg-warning bg-gradient text-dark small px-2 py-1">
+                      Low: {{ prod.stockQuantity }}
+                    </span>
+                    <span *ngIf="prod.stockQuantity > prod.minStockLevel" class="badge bg-success bg-gradient text-white small px-2 py-1">
+                      Qty: {{ prod.stockQuantity }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Right Section (30% in wide screens): Shopping Cart and Checkout Calculations -->
+    <div class="col-lg-4 d-flex flex-column h-100" style="min-height: 0;">
+      <div class="card border-0 shadow-sm rounded-4 p-3 bg-white d-flex flex-column h-100">
+        <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2 flex-shrink-0">
+          <h5 class="fw-bold text-dark mb-0"><i class="bi bi-cart3 text-primary me-2"></i>Current Cart</h5>
+          <button (click)="clearCart()" class="btn btn-outline-danger btn-xs rounded-pill" [disabled]="cart.length === 0">
+            Clear All
+          </button>
+        </div>
+
+        <!-- Scrollable Cart Items List -->
+        <div class="flex-grow-1 overflow-y-auto cart-scroll-bar mb-3 px-1" style="min-height: 0;">
+          <div *ngIf="cart.length === 0" class="text-center py-5 my-auto text-muted">
+            <i class="bi bi-cart-x fs-1 mb-2 d-block"></i>
+            <p>Your shopping cart is empty.</p>
+            <p class="small text-secondary">Click on catalog items on the left to add them to the bill.</p>
+          </div>
+
+          <div *ngIf="cart.length > 0" class="cart-list">
+            <div *ngFor="let item of cart" class="cart-item-row d-flex align-items-center justify-content-between p-2 rounded-3 mb-2 border">
+              <div class="flex-grow-1 me-2 text-truncate">
+                <div class="fw-bold text-dark text-truncate small" [title]="item.product.name">{{ item.product.name }}</div>
+                <div class="text-primary font-monospace small">${{ item.product.price.toFixed(2) }}</div>
+              </div>
+
+              <!-- Quantity Controls plus minus -->
+              <div class="d-flex align-items-center me-2 flex-shrink-0">
+                <button (click)="updateQuantity(item, -1)" class="btn btn-light btn-xs rounded-circle border px-2 py-0.5"><i class="bi bi-minus"></i></button>
+                <span class="mx-2 fw-bold text-dark font-monospace">{{ item.quantity }}</span>
+                <button (click)="updateQuantity(item, 1)" class="btn btn-light btn-xs rounded-circle border px-2 py-0.5" [disabled]="item.quantity >= item.product.stockQuantity"><i class="bi bi-plus"></i></button>
+              </div>
+
+              <!-- Subtotal price & Delete icon -->
+              <div class="d-flex align-items-center flex-shrink-0 text-end">
+                <span class="fw-bold text-dark font-monospace me-2 small" style="min-width: 60px;">
+                  ${{ (item.product.price * item.quantity).toFixed(2) }}
+                </span>
+                <button (click)="removeFromCart(item.product.id!)" class="btn text-danger btn-xs border-0"><i class="bi bi-trash"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calculation Panel (Bottom Cart) -->
+        <div class="border-top pt-3 flex-shrink-0 bg-light p-3 rounded-4 shadow-inner">
+          <div class="d-flex justify-content-between mb-2 text-muted small">
+            <span>Cart Subtotal</span>
+            <span class="font-monospace">${{ cartSubtotal.toFixed(2) }}</span>
+          </div>
+
+          <div class="d-flex justify-content-between mb-2 text-muted small">
+            <span>Sales Tax (5%)</span>
+            <span class="font-monospace">${{ cartTax.toFixed(2) }}</span>
+          </div>
+
+          <div class="d-flex align-items-center justify-content-between mb-3 text-muted small">
+            <span>Custom Discount ($)</span>
+            <input 
+              type="number" 
+              class="form-control form-control-sm text-end font-monospace rounded-3" 
+              style="width: 100px;" 
+              [(ngModel)]="discount" 
+              min="0"
+              [max]="cartSubtotal"
+              [disabled]="cart.length === 0"
+            >
+          </div>
+
+          <div class="d-flex justify-content-between border-top pt-3 mb-3">
+            <span class="fw-bold fs-5 text-dark">GRAND TOTAL</span>
+            <span class="fw-extrabold fs-4 text-success font-monospace">${{ cartTotal.toFixed(2) }}</span>
+          </div>
+
+          <button 
+            (click)="openPayment()" 
+            class="btn btn-success btn-lg w-100 rounded-3 py-2.5 fw-bold d-flex align-items-center justify-content-center"
+            [disabled]="cart.length === 0"
+          >
+            <i class="bi bi-credit-card-2-front-fill me-2 fs-5"></i> Process Payment
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PAYMENT TRANSACTION MODAL ================= -->
+  <div *ngIf="showPaymentModal" class="modal-backdrop-custom d-flex align-items-center justify-content-center p-3 animate fade-in">
+    <div class="payment-modal card border-0 shadow-lg rounded-4 overflow-hidden" style="max-width: 500px; width: 100%;">
+      <!-- Header -->
+      <div class="bg-primary bg-gradient text-white p-3 d-flex align-items-center justify-content-between">
+        <h5 class="fw-bold mb-0"><i class="bi bi-wallet2 me-2"></i>Checkout Processing</h5>
+        <button (click)="closePayment()" class="btn-close btn-close-white" aria-label="Close"></button>
+      </div>
+
+      <!-- Body -->
+      <div class="card-body p-4 bg-white">
+        <!-- Error Alert -->
+        <div *ngIf="errorMessage" class="alert alert-danger border-0 rounded-3 py-2 px-3 mb-3 small d-flex align-items-center">
+          <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+          <div>{{ errorMessage }}</div>
+        </div>
+
+        <!-- Total display box -->
+        <div class="bg-light p-3 rounded-4 border text-center mb-4">
+          <div class="text-secondary small fw-semibold uppercase mb-1">Grand Total Due</div>
+          <div class="fw-extrabold text-success fs-2 font-monospace">${{ cartTotal.toFixed(2) }}</div>
+        </div>
+
+        <!-- Method selection -->
+        <div class="mb-4">
+          <label class="form-label fw-bold text-secondary mb-2">Select Payment Method</label>
+          <div class="row g-2">
+            <div class="col-4">
+              <button 
+                type="button" 
+                class="method-btn w-100 py-3 rounded-3 border d-flex flex-column align-items-center gap-1.5 fw-bold"
+                [class.active-method]="paymentMethod === 'Cash'"
+                (click)="paymentMethod = 'Cash'"
+              >
+                <i class="bi bi-cash-coin fs-3"></i> Cash
+              </button>
+            </div>
+            <div class="col-4">
+              <button 
+                type="button" 
+                class="method-btn w-100 py-3 rounded-3 border d-flex flex-column align-items-center gap-1.5 fw-bold"
+                [class.active-method]="paymentMethod === 'Card'"
+                (click)="paymentMethod = 'Card'"
+              >
+                <i class="bi bi-credit-card fs-3"></i> Card Swipe
+              </button>
+            </div>
+            <div class="col-4">
+              <button 
+                type="button" 
+                class="method-btn w-100 py-3 rounded-3 border d-flex flex-column align-items-center gap-1.5 fw-bold"
+                [class.active-method]="paymentMethod === 'Mobile'"
+                (click)="paymentMethod = 'Mobile'"
+              >
+                <i class="bi bi-phone fs-3"></i> Mobile Pay
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Conditional Cash calculations inputs -->
+        <div *ngIf="paymentMethod === 'Cash'" class="animate fade-in">
+          <!-- Paid input field -->
+          <div class="mb-3">
+            <label for="amountPaid" class="form-label fw-bold text-secondary mb-1.5">Cash Amount Paid ($)</label>
+            <div class="input-group input-group-lg">
+              <span class="input-group-text bg-light">$</span>
+              <input 
+                type="number" 
+                step="0.01" 
+                id="amountPaid" 
+                class="form-control font-monospace fw-bold text-dark" 
+                [(ngModel)]="amountPaid"
+                required
+                min="0"
+              >
+            </div>
+          </div>
+
+          <!-- Quick cash shortcut buttons -->
+          <div class="mb-4">
+            <div class="small text-muted mb-2 font-semibold">Quick Cash Benchmarks:</div>
+            <div class="row g-2">
+              <div *ngFor="let opt of quickCashOptions" class="col-3">
+                <button 
+                  type="button" 
+                  (click)="selectQuickCash(opt)" 
+                  class="btn btn-outline-secondary w-100 rounded-3 py-2 font-monospace small fw-bold"
+                >
+                  ${{ opt.toFixed(2) }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Change Returned box -->
+          <div class="bg-success-subtle border border-success border-opacity-25 p-3 rounded-4 text-center mb-4">
+            <div class="text-success fw-bold small mb-1">CHANGE TO RETURN:</div>
+            <div class="fw-extrabold text-success fs-3 font-monospace">${{ cashChange.toFixed(2) }}</div>
+          </div>
+        </div>
+
+        <div *ngIf="paymentMethod !== 'Cash'" class="bg-primary-subtle border border-primary border-opacity-10 p-4 rounded-4 text-center mb-4 animate fade-in">
+          <i class="bi bi-info-circle text-primary fs-3 mb-2 d-block"></i>
+          <span class="text-secondary small">Simulation Mode: Transaction completes and registers on the SQL database instantly on button tap.</span>
+        </div>
+
+        <!-- Action Button -->
+        <button 
+          (click)="submitCheckout()" 
+          class="btn btn-primary btn-lg w-100 rounded-3 py-2.5 fw-bold d-flex align-items-center justify-content-center"
+          [disabled]="submittingCheckout"
+        >
+          <span *ngIf="submittingCheckout" class="spinner-border spinner-border-sm me-2" role="status"></span>
+          <span>{{ submittingCheckout ? 'Authorizing SQLite Transaction...' : 'Complete Checkout' }}</span>
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= THERMAL RECEIPT MODAL ================= -->
+  <div *ngIf="showReceiptModal" class="modal-backdrop-custom d-flex align-items-center justify-content-center p-3 animate fade-in" style="z-index: 1100;">
+    <div class="receipt-modal card border-0 shadow-lg rounded-4 overflow-hidden" style="max-width: 400px; width: 100%;">
+      <!-- Card header -->
+      <div class="bg-success bg-gradient text-white p-3 text-center">
+        <i class="bi bi-check2-circle fs-1 d-block mb-1"></i>
+        <h5 class="fw-bold mb-0">Checkout Completed!</h5>
+        <span class="small opacity-75">SQL DB inventory records successfully updated.</span>
+      </div>
+
+      <!-- Thermal Ticket Body -->
+      <div class="card-body p-4 bg-light overflow-y-auto" style="max-height: 450px;">
+        <div class="thermal-receipt bg-white shadow-sm border p-4 font-monospace rounded-1">
+          <!-- Store header info -->
+          <div class="text-center mb-3">
+            <div class="fw-extrabold fs-5 uppercase">RETAIL TERMINAL POS</div>
+            <div class="small">123 Business Avenue, Suite A</div>
+            <div class="small">Phone: (555) 019-2834</div>
+            <div class="border-bottom my-2 dotted-border"></div>
+          </div>
+
+          <!-- Meta ticket details -->
+          <div class="small mb-3 text-muted">
+            <div><strong>TICKET ID:</strong> #{{ completedTransaction?.id }}</div>
+            <div><strong>DATE:</strong> {{ completedTransaction?.transactionDate | date:'medium' }}</div>
+            <div><strong>OPERATOR:</strong> {{ authService.currentUserValue?.fullName }}</div>
+            <div class="border-bottom my-2 dotted-border"></div>
+          </div>
+
+          <!-- Items loop -->
+          <div class="small mb-3">
+            <div *ngFor="let item of completedTransaction?.transactionItems" class="d-flex justify-content-between mb-1.5">
+              <div class="text-truncate me-2" style="max-width: 200px;">
+                {{ item.product?.name }} <br>
+                <span class="text-secondary extra-small">{{ item.quantity }} x ${{ item.unitPrice?.toFixed(2) }}</span>
+              </div>
+              <div class="text-end fw-bold">${{ item.subtotal?.toFixed(2) }}</div>
+            </div>
+            <div class="border-bottom my-2 dotted-border"></div>
+          </div>
+
+          <!-- Totals lists -->
+          <div class="small mb-3 font-semibold">
+            <div class="d-flex justify-content-between mb-1.5">
+              <span>Subtotal:</span>
+              <span>${{ completedTransaction?.subtotal?.toFixed(2) }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1.5">
+              <span>Sales Tax (5%):</span>
+              <span>${{ completedTransaction?.tax?.toFixed(2) }}</span>
+            </div>
+            <div *ngIf="completedTransaction?.discount! > 0" class="d-flex justify-content-between mb-1.5 text-danger">
+              <span>Discounts:</span>
+              <span>-${{ completedTransaction?.discount?.toFixed(2) }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1.5 fs-6 fw-extrabold border-top pt-2">
+              <span>GRAND TOTAL:</span>
+              <span>${{ completedTransaction?.total?.toFixed(2) }}</span>
+            </div>
+            <div class="border-bottom my-2 dotted-border"></div>
+          </div>
+
+          <!-- Payments breakdown -->
+          <div class="small">
+            <div class="d-flex justify-content-between mb-1">
+              <span>Payment Type:</span>
+              <span>{{ completedTransaction?.paymentMethod }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+              <span>Amount Paid:</span>
+              <span>${{ completedTransaction?.amountPaid?.toFixed(2) }}</span>
+            </div>
+            <div *ngIf="completedTransaction?.paymentMethod === 'Cash'" class="d-flex justify-content-between mb-1.5 fw-bold text-success border-top pt-1.5">
+              <span>Cash Change:</span>
+              <span>${{ completedTransaction?.changeReturned?.toFixed(2) }}</span>
+            </div>
+          </div>
+
+          <!-- Footer slogan -->
+          <div class="text-center mt-4 pt-2 border-top dotted-border small">
+            <div>Thank You For Shopping!</div>
+            <div class="extra-small text-muted">Powered by .NET 9 SQLite SQL POS</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <div class="card-footer bg-white border-0 p-3">
+        <button (click)="closeReceipt()" class="btn btn-success btn-lg w-100 rounded-3 py-2 fw-bold">
+          Start New Sale
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

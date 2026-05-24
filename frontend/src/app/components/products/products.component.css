@@ -1,0 +1,47 @@
+.product-thumbnail {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.preset-images-drawer {
+  background-color: #f8fafc;
+}
+
+.btn-xs {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+}
+
+.font-monospace {
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.extra-small {
+  font-size: 0.75rem;
+}
+
+.table th {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  color: #475569;
+}
+
+.table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.table td {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.badge {
+  font-size: 0.8rem;
+  letter-spacing: 0.3px;
+}
+
+.btn-group .btn {
+  box-shadow: none !important;
+}

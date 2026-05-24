@@ -1,0 +1,58 @@
+.register-container {
+  background: linear-gradient(135deg, #0f172a 0%, #064e3b 50%, #115e59 100%);
+  font-family: 'Outfit', 'Inter', sans-serif;
+  overflow: hidden;
+}
+
+.register-card {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.register-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5) !important;
+}
+
+.logo-icon {
+  box-shadow: 0 8px 20px rgba(25, 135, 84, 0.3);
+  animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+  0% {
+    box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(25, 135, 84, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(25, 135, 84, 0);
+  }
+}
+
+.form-floating > .form-control:focus ~ label::after {
+  background-color: transparent !important;
+}
+
+.btn-success {
+  background: linear-gradient(90deg, #198754 0%, #146c43 100%);
+  border: none;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(25, 135, 84, 0.3);
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-success:hover {
+  background: linear-gradient(90deg, #146c43 0%, #0f5132 100%);
+  transform: scale(1.02);
+  box-shadow: 0 6px 20px rgba(25, 135, 84, 0.4);
+}
+
+.btn-success:active {
+  transform: scale(0.98);
+}

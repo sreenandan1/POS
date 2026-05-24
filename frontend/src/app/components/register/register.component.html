@@ -1,0 +1,111 @@
+<div class="register-container d-flex align-items-center justify-content-center vh-100">
+  <div class="register-card card shadow-lg border-0 rounded-4 overflow-hidden" style="max-width: 480px; width: 90%;">
+    <div class="row g-0">
+      <div class="col-12 p-4 p-md-5">
+        <!-- Logo and Heading -->
+        <div class="text-center mb-4">
+          <div class="logo-icon bg-success bg-gradient text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+            <i class="bi bi-person-plus fs-2"></i>
+          </div>
+          <h2 class="fw-bold text-dark mb-1">Create Account</h2>
+          <p class="text-muted small">Register a new cashier or administrator account</p>
+        </div>
+
+        <!-- Error Alert -->
+        <div *ngIf="errorMessage" class="alert alert-danger d-flex align-items-center border-0 rounded-3 py-2 px-3 mb-3 fade show" role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+          <div class="small">{{ errorMessage }}</div>
+        </div>
+
+        <!-- Form -->
+        <form (ngSubmit)="onSubmit()" #registerForm="ngForm">
+          <!-- Full Name field -->
+          <div class="form-floating mb-3">
+            <input 
+              type="text" 
+              class="form-control rounded-3" 
+              id="fullName" 
+              name="fullName" 
+              placeholder="Full Name" 
+              [(ngModel)]="userData.fullName" 
+              required
+              #fullNameInput="ngModel"
+              [class.is-invalid]="fullNameInput.invalid && (fullNameInput.dirty || fullNameInput.touched)"
+            >
+            <label for="fullName">Full Name</label>
+            <div class="invalid-feedback">Full Name is required.</div>
+          </div>
+
+          <!-- Username field -->
+          <div class="form-floating mb-3">
+            <input 
+              type="text" 
+              class="form-control rounded-3" 
+              id="username" 
+              name="username" 
+              placeholder="Username" 
+              [(ngModel)]="userData.username" 
+              required
+              minlength="3"
+              #usernameInput="ngModel"
+              [class.is-invalid]="usernameInput.invalid && (usernameInput.dirty || usernameInput.touched)"
+            >
+            <label for="username">Username</label>
+            <div class="invalid-feedback">Username must be at least 3 characters.</div>
+          </div>
+
+          <!-- Password field -->
+          <div class="form-floating mb-3">
+            <input 
+              type="password" 
+              class="form-control rounded-3" 
+              id="password" 
+              name="password" 
+              placeholder="Password" 
+              [(ngModel)]="userData.password" 
+              required
+              minlength="6"
+              #passwordInput="ngModel"
+              [class.is-invalid]="passwordInput.invalid && (passwordInput.dirty || passwordInput.touched)"
+            >
+            <label for="password">Password</label>
+            <div class="invalid-feedback">Password must be at least 6 characters.</div>
+          </div>
+
+          <!-- Role selection field -->
+          <div class="form-floating mb-4">
+            <select 
+              class="form-select rounded-3" 
+              id="role" 
+              name="role" 
+              [(ngModel)]="userData.role" 
+              required
+            >
+              <option value="Cashier">Cashier</option>
+              <option value="Admin">Administrator</option>
+            </select>
+            <label for="role">User Role</label>
+          </div>
+
+          <!-- Submit button -->
+          <button 
+            type="submit" 
+            class="btn btn-success btn-lg w-100 rounded-3 mb-3 d-flex align-items-center justify-content-center"
+            [disabled]="registerForm.invalid || loading"
+          >
+            <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            <span>{{ loading ? 'Creating Account...' : 'Register' }}</span>
+          </button>
+        </form>
+
+        <!-- Divider & Seeding Tip -->
+        <div class="text-center mt-3">
+          <p class="text-muted small mb-0">
+            Already have an account? <a href="javascript:void(0)" (click)="goToLogin()" class="text-decoration-none fw-semibold text-success">Sign in here</a>
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

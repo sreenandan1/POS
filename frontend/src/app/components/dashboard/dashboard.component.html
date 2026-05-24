@@ -1,0 +1,286 @@
+<div class="container-fluid py-4 px-md-5 bg-light min-vh-100">
+  <!-- Manager Header -->
+  <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom bg-white p-3 rounded-4 shadow-sm">
+    <div class="d-flex align-items-center">
+      <div class="bg-dark text-white rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+        <i class="bi bi-shop fs-3"></i>
+      </div>
+      <div>
+        <h2 class="fw-bold mb-0 text-dark">{{ stats?.restaurantName || 'Gourmet Bistro' }}</h2>
+        <p class="text-muted mb-0 small">Branch Manager Workspace | Scoped to: <strong>{{ currentUser?.restaurantName }}</strong></p>
+      </div>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <div class="text-end text-secondary small d-none d-md-block">
+        Logged in: <strong>{{ currentUser?.fullName }}</strong> ({{ currentUser?.role }})
+      </div>
+      <button (click)="logout()" class="btn btn-outline-danger rounded-3">
+        <i class="bi bi-box-arrow-right me-1"></i> Log Out
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI overview statistics cards -->
+  <div class="row g-3 mb-4">
+    <!-- Today's Sales -->
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm rounded-4 p-4 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span class="text-uppercase small fw-bold opacity-75">Today's Sales</span>
+          <i class="bi bi-currency-dollar fs-3"></i>
+        </div>
+        <h2 class="fw-extrabold mb-1 font-monospace">${{ stats?.todaySales?.toFixed(2) || '0.00' }}</h2>
+        <div class="small opacity-75">Total cumulative revenue today</div>
+      </div>
+    </div>
+
+    <!-- Today's checkouts counts -->
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white text-dark">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span class="text-uppercase text-secondary small fw-bold">Today's Transactions</span>
+          <i class="bi bi-receipt fs-3 text-primary"></i>
+        </div>
+        <h2 class="fw-extrabold mb-1 text-dark">{{ stats?.todayTransactionsCount || 0 }}</h2>
+        <div class="small text-muted">Receipt checkouts processed today</div>
+      </div>
+    </div>
+
+    <!-- Active Low Stock warnings -->
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white text-dark">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span class="text-uppercase text-secondary small fw-bold">Low Stock Warning</span>
+          <i class="bi bi-exclamation-triangle-fill fs-3" [ngClass]="stats?.lowStockCount > 0 ? 'text-danger animate-pulse' : 'text-secondary'"></i>
+        </div>
+        <h2 class="fw-extrabold mb-1" [class.text-danger]="stats?.lowStockCount > 0">{{ stats?.lowStockCount || 0 }}</h2>
+        <div class="small text-muted">Catalog items below warnings threshold</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Primary Dashboard Section Split Layout -->
+  <div class="row g-4">
+    <!-- Left Column: Actions Shortcuts & Audits Tables (70% wide) -->
+    <div class="col-xl-8 col-lg-7">
+      <!-- POS Management Shortcuts -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+        <h4 class="fw-bold mb-4 text-dark"><i class="bi bi-grid-fill text-primary me-2"></i>Quick Terminal Shortcuts</h4>
+        <div class="row g-3">
+          <!-- Launch POS Billing -->
+          <div class="col-md-4">
+            <a routerLink="/checkout" class="shortcut-card card border-0 text-white rounded-4 p-3 h-100 text-decoration-none shadow" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+              <i class="bi bi-cart-dash-fill fs-1 mb-2"></i>
+              <h5 class="fw-bold mb-1 text-white">POS Terminal</h5>
+              <p class="small text-white opacity-75 mb-0">Open cashier register billing checkout terminal.</p>
+            </a>
+          </div>
+          <!-- Manage Categories -->
+          <div class="col-md-4">
+            <a routerLink="/categories" class="shortcut-card card border-0 text-white rounded-4 p-3 h-100 text-decoration-none shadow" style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);">
+              <i class="bi bi-tags-fill fs-1 mb-2"></i>
+              <h5 class="fw-bold mb-1 text-white">Menu Categories</h5>
+              <p class="small text-white opacity-75 mb-0">Manage food/drink tags and color presets.</p>
+            </a>
+          </div>
+          <!-- Manage Menu Items -->
+          <div class="col-md-4">
+            <a routerLink="/products" class="shortcut-card card border-0 text-white rounded-4 p-3 h-100 text-decoration-none shadow" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+              <i class="bi bi-cart-fill fs-1 mb-2"></i>
+              <h5 class="fw-bold mb-1 text-white">Menu Items</h5>
+              <p class="small text-white opacity-75 mb-0">Manage price, cost, description, and catalog stock quantity.</p>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Transactions Audit Log -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+        <h4 class="fw-bold mb-4 text-dark"><i class="bi bi-receipt-cutoff text-primary me-2"></i>Recent Sales Checkouts</h4>
+
+        <div *ngIf="!stats?.recentTransactions || stats?.recentTransactions?.length === 0" class="text-center py-4 text-muted">
+          <i class="bi bi-cart-x fs-2 mb-2 d-block"></i> No sales recorded yet. Start checkouts in the POS terminal.
+        </div>
+
+        <div *ngIf="stats?.recentTransactions?.length > 0" class="table-responsive">
+          <table class="table align-middle table-hover">
+            <thead class="table-light">
+              <tr>
+                <th scope="col">Ticket ID</th>
+                <th scope="col">Date</th>
+                <th scope="col">Checkout Clerk</th>
+                <th scope="col">Payment</th>
+                <th scope="col" class="text-end">Ticket Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let tx of stats?.recentTransactions">
+                <td>
+                  <span class="fw-bold text-dark font-monospace">#{{ tx.id }}</span>
+                </td>
+                <td>
+                  <span class="small text-muted">{{ tx.transactionDate | date:'medium' }}</span>
+                </td>
+                <td>
+                  <span class="small text-dark fw-semibold">{{ tx.cashierName }}</span>
+                </td>
+                <td>
+                  <span class="badge bg-light text-dark border px-2 py-1">{{ tx.paymentMethod }}</span>
+                </td>
+                <td class="text-end">
+                  <span class="fw-extrabold text-success font-monospace">${{ tx.total.toFixed(2) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Low Stock Warnings List -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <h4 class="fw-bold mb-4 text-dark"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Active Low Stock Alerts</h4>
+
+        <div *ngIf="!stats?.lowStockProducts || stats?.lowStockProducts?.length === 0" class="text-center py-4 text-muted">
+          <i class="bi bi-check-circle fs-2 text-success mb-2 d-block"></i> All products are well-stocked! No stock alerts.
+        </div>
+
+        <div *ngIf="stats?.lowStockProducts?.length > 0" class="table-responsive">
+          <table class="table align-middle">
+            <thead class="table-light">
+              <tr>
+                <th scope="col">Item Name</th>
+                <th scope="col">SKU</th>
+                <th scope="col">Category</th>
+                <th scope="col" class="text-end">Stock Level</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of stats?.lowStockProducts">
+                <td>
+                  <span class="fw-bold text-dark">{{ item.name }}</span>
+                </td>
+                <td>
+                  <code class="text-secondary small">{{ item.sku }}</code>
+                </td>
+                <td>
+                  <span class="badge bg-secondary rounded-pill px-2.5 py-1">{{ item.categoryName }}</span>
+                </td>
+                <td class="text-end">
+                  <span class="badge bg-danger rounded-pill px-3 py-1.5 fw-bold font-monospace">
+                    {{ item.stockQuantity }} left (Min: {{ item.minStockLevel }})
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Add Staff & Active Staff Directories (30% wide) -->
+    <div class="col-xl-4 col-lg-5">
+      <!-- Form: Register Restaurant Staff -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+        <h4 class="fw-bold mb-4 text-dark"><i class="bi bi-person-plus text-primary me-2"></i>Register Shop Staff</h4>
+
+        <div *ngIf="staffSuccess" class="alert alert-success border-0 rounded-3 small py-2 mb-3">{{ staffSuccess }}</div>
+        <div *ngIf="staffError" class="alert alert-danger border-0 rounded-3 small py-2 mb-3">{{ staffError }}</div>
+
+        <form (ngSubmit)="onSubmitStaff()" #staffForm="ngForm">
+          <!-- Full Name -->
+          <div class="mb-3">
+            <label for="staffFullName" class="form-label text-secondary small fw-bold mb-1">Clerk Full Name *</label>
+            <input 
+              type="text" 
+              class="form-control rounded-3" 
+              id="staffFullName" 
+              name="fullName" 
+              placeholder="e.g. Mike Waiter" 
+              [(ngModel)]="newStaff.fullName" 
+              required
+            >
+          </div>
+          <!-- Username -->
+          <div class="mb-3">
+            <label for="staffUsername" class="form-label text-secondary small fw-bold mb-1">Username *</label>
+            <input 
+              type="text" 
+              class="form-control rounded-3" 
+              id="staffUsername" 
+              name="username" 
+              placeholder="e.g. mike1" 
+              [(ngModel)]="newStaff.username" 
+              required
+            >
+          </div>
+          <!-- Password -->
+          <div class="mb-3">
+            <label for="staffPassword" class="form-label text-secondary small fw-bold mb-1">Set Password *</label>
+            <input 
+              type="password" 
+              class="form-control rounded-3" 
+              id="staffPassword" 
+              name="password" 
+              placeholder="Min 6 characters" 
+              [(ngModel)]="newStaff.password" 
+              required
+              minlength="6"
+            >
+          </div>
+          <!-- Role selection -->
+          <div class="mb-4">
+            <label for="staffRole" class="form-label text-secondary small fw-bold mb-1">Store Role *</label>
+            <select 
+              class="form-select rounded-3" 
+              id="staffRole" 
+              name="role" 
+              [(ngModel)]="newStaff.role" 
+              required
+            >
+              <option value="Waiter">Waiter</option>
+              <option value="Cashier">Cashier</option>
+            </select>
+          </div>
+          <!-- Submit Button -->
+          <button 
+            type="submit" 
+            class="btn btn-primary w-100 rounded-3 py-2 fw-bold"
+            [disabled]="staffForm.invalid || submittingStaff"
+          >
+            <span *ngIf="submittingStaff" class="spinner-border spinner-border-sm me-2"></span>
+            Register Clerk Staff
+          </button>
+        </form>
+      </div>
+
+      <!-- Table: Registered Staff Directories -->
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <h5 class="fw-bold text-dark mb-4 border-bottom pb-2"><i class="bi bi-people-fill text-primary me-2"></i>Active Waiters & Cashiers</h5>
+
+        <div *ngIf="loadingStaff" class="text-center py-4">
+          <div class="spinner-border text-primary" role="status"></div>
+        </div>
+
+        <div *ngIf="!loadingStaff && registeredStaff.length === 0" class="text-center py-4 text-muted small">
+          <i class="bi bi-people fs-2 mb-2 d-block"></i> No staff registered yet. Add waiters and cashiers above.
+        </div>
+
+        <div *ngIf="!loadingStaff && registeredStaff.length > 0" class="staff-list">
+          <div *ngFor="let member of registeredStaff" class="d-flex align-items-center justify-content-between p-2 rounded-3 border mb-2 bg-light">
+            <div class="text-truncate">
+              <span class="fw-bold text-dark small d-block text-truncate">{{ member.fullName }}</span>
+              <code class="text-secondary extra-small font-monospace">{{ member.username }}</code>
+            </div>
+            <span 
+              class="badge rounded-pill px-2.5 py-1 fw-bold small" 
+              [ngClass]="member.role === 'Cashier' ? 'bg-indigo text-white bg-gradient' : 'bg-success text-white bg-gradient'"
+              [style.backgroundColor]="member.role === 'Cashier' ? '#6610f2' : ''"
+            >
+              {{ member.role }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,185 @@
+<div class="container py-4">
+  <!-- Header Navigation -->
+  <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
+    <div class="d-flex align-items-center">
+      <button (click)="goBack()" class="btn btn-outline-secondary btn-sm rounded-3 me-3">
+        <i class="bi bi-arrow-left me-1"></i> Back
+      </button>
+      <h2 class="fw-bold mb-0 text-dark">
+        <i class="bi bi-tags-fill text-primary me-2"></i> Category Management
+      </h2>
+    </div>
+    <div class="text-muted small">Logged in: <strong>{{ authService.currentUserValue?.fullName }}</strong></div>
+  </div>
+
+  <!-- Messages Alert Banners -->
+  <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-sm mb-4" role="alert">
+    <i class="bi bi-check-circle-fill me-2 fs-5"></i> {{ successMessage }}
+    <button type="button" class="btn-close" (click)="successMessage = ''" aria-label="Close"></button>
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-sm mb-4" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i> {{ errorMessage }}
+    <button type="button" class="btn-close" (click)="errorMessage = ''" aria-label="Close"></button>
+  </div>
+
+  <!-- Responsive Form and Grid Layout -->
+  <div class="row g-4">
+    <!-- Left Column: Create or Edit Category form -->
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <h4 class="fw-bold mb-4 text-dark">
+          {{ isEditing ? 'Edit Category' : 'New Category' }}
+        </h4>
+
+        <form (ngSubmit)="onSubmit()" #catForm="ngForm">
+          <!-- Category Name field -->
+          <div class="mb-4">
+            <label for="name" class="form-label fw-semibold text-secondary">Category Name</label>
+            <input 
+              type="text" 
+              class="form-control form-control-lg rounded-3" 
+              id="name" 
+              name="name" 
+              placeholder="e.g. Desserts" 
+              [(ngModel)]="formModel.name" 
+              required
+              #nameInput="ngModel"
+              [class.is-invalid]="nameInput.invalid && (nameInput.dirty || nameInput.touched)"
+            >
+            <div class="invalid-feedback">Category name is required.</div>
+          </div>
+
+          <!-- Color Grid presets and Picker -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold text-secondary mb-3">Category Tag Color</label>
+            
+            <!-- Grid Presets -->
+            <div class="row g-2 mb-3">
+              <div *ngFor="let preset of presetColors" class="col-3">
+                <button 
+                  type="button" 
+                  class="color-preset-btn w-100 rounded-3 border-0" 
+                  [style.backgroundColor]="preset.value" 
+                  [title]="preset.name"
+                  (click)="selectPresetColor(preset.value)"
+                  [class.active-color]="formModel.color === preset.value"
+                >
+                  <i *ngIf="formModel.color === preset.value" class="bi bi-check text-white fs-5"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Custom Hex Input and Preview -->
+            <div class="d-flex align-items-center gap-3">
+              <div class="flex-grow-1">
+                <div class="input-group">
+                  <span class="input-group-text bg-light rounded-start-3"><i class="bi bi-hash"></i></span>
+                  <input 
+                    type="text" 
+                    class="form-control rounded-end-3" 
+                    name="color" 
+                    [(ngModel)]="formModel.color" 
+                    placeholder="0d6efd" 
+                    required
+                  >
+                </div>
+              </div>
+              <!-- Color Preview Box -->
+              <div class="color-preview-box rounded-3 border" [style.backgroundColor]="formModel.color"></div>
+            </div>
+          </div>
+
+          <!-- Form Buttons -->
+          <div class="d-grid gap-2">
+            <button 
+              type="submit" 
+              class="btn btn-primary btn-lg rounded-3 d-flex align-items-center justify-content-center"
+              [disabled]="catForm.invalid || submitting"
+            >
+              <span *ngIf="submitting" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              <span>{{ isEditing ? 'Update Category' : 'Add Category' }}</span>
+            </button>
+            <button 
+              *ngIf="isEditing" 
+              type="button" 
+              (click)="resetForm()" 
+              class="btn btn-outline-secondary rounded-3"
+            >
+              Cancel Edit
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right Column: Categories Audit Grid -->
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+          <h4 class="fw-bold text-dark mb-0">Active Categories Inventory</h4>
+          <span class="badge bg-secondary rounded-pill px-3 py-1.5 fw-bold">{{ categories.length }} Items</span>
+        </div>
+
+        <!-- Loader Spinner -->
+        <div *ngIf="loading" class="text-center py-5">
+          <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+            <span class="visually-hidden">Loading categories...</span>
+          </div>
+          <p class="text-muted mt-3">Fetching SQL entries...</p>
+        </div>
+
+        <!-- Empty state -->
+        <div *ngIf="!loading && categories.length === 0" class="text-center py-5">
+          <i class="bi bi-tag text-muted fs-1 mb-3 d-block"></i>
+          <p class="text-muted">No categories created yet. Use the panel on the left to add one.</p>
+        </div>
+
+        <!-- Category cards table grid -->
+        <div *ngIf="!loading && categories.length > 0" class="table-responsive">
+          <table class="table align-middle table-hover">
+            <thead class="table-light">
+              <tr>
+                <th scope="col" style="width: 80px;">Color</th>
+                <th scope="col">Category Name</th>
+                <th scope="col">Hex Code</th>
+                <th scope="col" class="text-end" style="width: 150px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let cat of categories">
+                <td>
+                  <span class="category-tag-badge d-inline-block rounded-circle" [style.backgroundColor]="cat.color"></span>
+                </td>
+                <td>
+                  <span class="fw-bold text-dark fs-5">{{ cat.name }}</span>
+                </td>
+                <td>
+                  <code class="text-secondary small">{{ cat.color }}</code>
+                </td>
+                <td class="text-end">
+                  <div class="btn-group gap-2">
+                    <button 
+                      (click)="editCategory(cat)" 
+                      class="btn btn-outline-primary btn-sm rounded-3 px-2.5 py-1"
+                      title="Edit Category"
+                    >
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <button 
+                      (click)="deleteCategory(cat.id!, cat.name)" 
+                      class="btn btn-outline-danger btn-sm rounded-3 px-2.5 py-1"
+                      title="Delete Category"
+                    >
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

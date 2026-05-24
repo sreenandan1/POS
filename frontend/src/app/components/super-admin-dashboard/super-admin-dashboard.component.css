@@ -1,0 +1,17 @@
+.card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.table th {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  color: #475569;
+}
+
+.font-monospace {
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.extra-small {
+  font-size: 0.75rem;
+}
