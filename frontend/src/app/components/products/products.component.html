@@ -163,15 +163,27 @@
 
           <!-- Image Selection & URL -->
           <div class="mb-4">
-            <label for="imageUrl" class="form-label fw-semibold text-secondary small mb-1">Item Image URL</label>
-            <input 
-              type="text" 
-              class="form-control rounded-3 mb-2" 
-              id="imageUrl" 
-              name="imageUrl" 
-              placeholder="https://..." 
-              [(ngModel)]="formModel.imageUrl"
-            >
+            <label for="imageUrl" class="form-label fw-semibold text-secondary small mb-1">Item Image URL or File</label>
+            <div class="input-group mb-2">
+              <input 
+                type="text" 
+                class="form-control rounded-start-3" 
+                id="imageUrl" 
+                name="imageUrl" 
+                placeholder="https://..." 
+                [(ngModel)]="formModel.imageUrl"
+              >
+              <input 
+                type="file" 
+                #fileInput 
+                style="display: none;" 
+                accept="image/*"
+                (change)="onFileSelected($event)"
+              >
+              <button class="btn btn-outline-secondary rounded-end-3" type="button" (click)="fileInput.click()">
+                <i class="bi bi-upload"></i> Browse
+              </button>
+            </div>
             
             <!-- Custom Presets Drawer for easy image setting -->
             <div class="preset-images-drawer p-2 rounded-3 border bg-light">

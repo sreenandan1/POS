@@ -38,7 +38,6 @@ namespace backend.Models
         [ForeignKey("CategoryId")]
         public Category? Category { get; set; }
 
-        [MaxLength(200)]
         public string ImageUrl { get; set; } = string.Empty;
 
         [Required]

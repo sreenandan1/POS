@@ -77,3 +77,4 @@ C:\Users\sreen\OneDrive\Desktop\SOFTWARE\New folder\POS\backend\obj\Debug\net9.0
 C:\Users\sreen\OneDrive\Desktop\SOFTWARE\New folder\POS\backend\obj\Debug\net9.0\backend.pdb
 C:\Users\sreen\OneDrive\Desktop\SOFTWARE\New folder\POS\backend\obj\Debug\net9.0\backend.genruntimeconfig.cache
 C:\Users\sreen\OneDrive\Desktop\SOFTWARE\New folder\POS\backend\obj\Debug\net9.0\ref\backend.dll
+C:\Users\sreen\OneDrive\Desktop\SOFTWARE\New folder\POS\backend\obj\Debug\net9.0\backend.sourcelink.json

@@ -51,7 +51,10 @@ export class CategoriesComponent implements OnInit {
 
   loadCategories(): void {
     this.loading = true;
-    this.categoryService.getCategories().subscribe({
+    const user = this.authService.currentUserValue;
+    const restaurantId = user && user.restaurantId ? Number(user.restaurantId) : undefined;
+
+    this.categoryService.getCategories(restaurantId).subscribe({
       next: (data) => {
         this.categories = data;
         this.loading = false;
@@ -70,6 +73,14 @@ export class CategoriesComponent implements OnInit {
   onSubmit(): void {
     if (!this.formModel.name.trim()) {
       this.errorMessage = 'Category name is required.';
+      return;
+    }
+
+    const user = this.authService.currentUserValue;
+    if (user && user.restaurantId) {
+      this.formModel.restaurantId = Number(user.restaurantId);
+    } else {
+      this.errorMessage = 'A valid restaurant is required to manage categories.';
       return;
     }
 
@@ -110,6 +121,7 @@ export class CategoriesComponent implements OnInit {
     this.isEditing = true;
     this.currentCategoryId = category.id || null;
     this.formModel = {
+      id: category.id,
       name: category.name,
       color: category.color
     };

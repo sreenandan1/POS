@@ -15,6 +15,7 @@ export interface Product {
   minStockLevel: number;
   categoryId: number;
   category?: Category;
+  restaurantId?: number;
   imageUrl?: string;
   createdAt?: string;
 }

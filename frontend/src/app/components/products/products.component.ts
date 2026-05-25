@@ -64,7 +64,10 @@ export class ProductsComponent implements OnInit {
   }
 
   loadCategories(): void {
-    this.categoryService.getCategories().subscribe({
+    const user = this.authService.currentUserValue;
+    const restaurantId = user && user.restaurantId ? Number(user.restaurantId) : undefined;
+
+    this.categoryService.getCategories(restaurantId).subscribe({
       next: (data) => {
         this.categories = data;
         // If there is at least one category, set it as default in form
@@ -77,7 +80,10 @@ export class ProductsComponent implements OnInit {
 
   loadProducts(): void {
     this.loading = true;
-    this.productService.getProducts(this.searchText, this.selectedCategoryId || undefined).subscribe({
+    const user = this.authService.currentUserValue;
+    const restaurantId = user && user.restaurantId ? Number(user.restaurantId) : undefined;
+
+    this.productService.getProducts(this.searchText, this.selectedCategoryId || undefined, restaurantId).subscribe({
       next: (data) => {
         this.products = data;
         this.loading = false;
@@ -103,9 +109,29 @@ export class ProductsComponent implements OnInit {
     this.formModel.imageUrl = url;
   }
 
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.formModel.imageUrl = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
   onSubmit(): void {
     if (!this.formModel.name.trim() || !this.formModel.sku.trim() || this.formModel.categoryId === 0) {
       this.errorMessage = 'Please fill out all required fields (Name, SKU, Category).';
+      return;
+    }
+
+    const user = this.authService.currentUserValue;
+    if (user && user.restaurantId) {
+      this.formModel.restaurantId = Number(user.restaurantId);
+    } else {
+      this.errorMessage = 'A valid restaurant is required to manage products.';
       return;
     }
 
@@ -151,6 +177,7 @@ export class ProductsComponent implements OnInit {
     this.isEditing = true;
     this.currentProductId = product.id || null;
     this.formModel = {
+      id: product.id,
       name: product.name,
       sku: product.sku,
       barcode: product.barcode || '',

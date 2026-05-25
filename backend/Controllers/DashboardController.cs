@@ -31,7 +31,7 @@ namespace backend.Controllers
 
             // Fetch today's sales breakdown per restaurant
             var today = DateTime.UtcNow.Date;
-            var restaurantSales = await _context.Restaurants
+            var restaurantSalesQuery = await _context.Restaurants
                 .Select(r => new
                 {
                     RestaurantId = r.Id,
@@ -43,8 +43,11 @@ namespace backend.Controllers
                         .Where(t => t.RestaurantId == r.Id)
                         .Sum(t => (decimal?)t.Total) ?? 0
                 })
-                .OrderByDescending(r => r.TotalSales)
                 .ToListAsync();
+
+            var restaurantSales = restaurantSalesQuery
+                .OrderByDescending(r => r.TotalSales)
+                .ToList();
 
             return Ok(new
             {
@@ -91,7 +94,7 @@ namespace backend.Controllers
                 .CountAsync();
 
             var today = DateTime.UtcNow.Date;
-            var restaurantSales = await _context.Restaurants
+            var restaurantSalesQuery = await _context.Restaurants
                 .Where(r => r.OwnerId == ownerId)
                 .Select(r => new
                 {
@@ -104,8 +107,11 @@ namespace backend.Controllers
                         .Where(t => t.RestaurantId == r.Id)
                         .Sum(t => (decimal?)t.Total) ?? 0
                 })
-                .OrderByDescending(r => r.TotalSales)
                 .ToListAsync();
+
+            var restaurantSales = restaurantSalesQuery
+                .OrderByDescending(r => r.TotalSales)
+                .ToList();
 
             return Ok(new
             {
